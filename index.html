@@ -1,34 +1,112 @@
+<!-- <html>
+
+<head>
+  <style>
+    body {
+      font-family: "Helvetica Neue", helvetica, arial;
+      padding: 15px;
+    }
+
+    ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    ul li {
+      line-height: 1.4;
+    }
+  </style>
+
+  <script>
+    var host = location.origin.replace(/^http/, 'ws')
+    var ws = new WebSocket(host);
+    ws.onmessage = function (event) {
+      var li = document.createElement('li');
+      li.innerHTML = JSON.parse(event.data);
+      document.querySelector('#pings').appendChild(li);
+    };
+  </script>
+</head>
+
+<body>
+  <h1>Pings</h1>
+  <ul id='pings'></ul>
+</body>
+
+</html> -->
+
+
+
+<!DOCTYPE HTML>
 <html>
-  <head>
-    <style>
-      body {
-        font-family: "Helvetica Neue", helvetica, arial;
-        padding: 15px;
-      }
 
-      ul {
-        list-style: none;
-        margin: 0;
-        padding: 0;
-      }
+<head>
+  <title>Flask-SocketIO Test</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+  <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
+  <script type="text/javascript" charset="utf-8">
+    $(document).ready(function () {
+      namespace = '/test'; // change to an empty string to use the global namespace
 
-      ul li {
-        line-height: 1.4;
-      }
-    </style>
+      // the socket.io documentation recommends sending an explicit package upon connection
+      // this is specially important when using the global namespace
 
-    <script>
-      var host = location.origin.replace(/^http/, 'ws')
-      var ws = new WebSocket(host);
-      ws.onmessage = function (event) {
-        var li = document.createElement('li');
-        li.innerHTML = JSON.parse(event.data);
-        document.querySelector('#pings').appendChild(li);
+      //var socket = io.connect('https://' + document.domain + ':' + location.port + namespace);
+      // Changing from the above line in the original example to the following allows the
+      // system to work locally with http, and on Heroku with both https and http:
+      var socket = io.connect(namespace);
+      socket.on('connection', function () {
+        console.log("Connecting...")
+        socket.emit('my event', { data: 'I\'m connected!' });
+        // handlers for the different forms in the page
+        // these send data to the server in a variety of ways
+
+      });
+
+      // event handler for server sent data
+      // the data is displayed in the "Received" section of the page
+      socket.on('my response', function (msg) {
+        $('#log').append('<br>Received #' + msg.count + ': ' + msg.data);
+      });
+
+    });
+  </script> -->
+
+
+</head>
+
+<body>
+  <h2 id="server-time">Server time</h2>
+  <h2>Send:</h2>
+  <input type="text" name="message_data" id="message_data" placeholder="Message">
+  <button id="send">Send</button>
+  <h2>Receive:</h2>
+  <div id="log"></div>
+
+  <script>
+    let HOST = location.origin.replace(/^http/, 'ws')
+    let ws = new WebSocket(HOST);
+    let el;
+
+    ws.onmessage = (event) => {
+      el = document.getElementById('server-time');
+      el.innerHTML = 'Server time: ' + event.data;
+    };
+
+    const button = document.querySelector('#send');
+
+    button.addEventListener('click', event => {
+      console.log("Sending...")
+      var msg = {
+        type: "message",
+        text: document.getElementById("message_data").value,
       };
-    </script>
-  </head>
-  <body>
-    <h1>Pings</h1>
-    <ul id='pings'></ul>
-  </body>
+
+      ws.send(JSON.stringify(msg));
+    });
+
+  </script>
+</body>
+
 </html>
