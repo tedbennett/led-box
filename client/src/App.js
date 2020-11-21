@@ -8,7 +8,7 @@ class App extends Component {
     super()
     this.state = { value: '', messages: [] }
     const PORT = process.env.PORT || 5000;
-    this.client = new WebSocket(`ws://0.0.0.0:${PORT}`);
+    this.client = new WebSocket(`wss://0.0.0.0:${PORT}`);
   
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
