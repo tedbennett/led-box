@@ -7,15 +7,15 @@ class App extends Component {
   constructor() {
     super()
     this.state = { value: '', messages: [] }
-    const PORT = process.env.PORT || 5000;
-    this.client = new WebSocket(`wss://0.0.0.0:${PORT}`);
+    var host = window.location.origin.replace(/^http/, 'ws')
+    this.client = new WebSocket(host);
   
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
 
 
-  componentWillMount() {
+  componentDidMount() {
     this.client.onopen = () => {
       console.log('WebSocket Client Connected');
     };
