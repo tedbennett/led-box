@@ -12,19 +12,46 @@ server.listen(port)
 
 console.log("http server listening on %d", port)
 
+// list of box ids
+var boxes = [];
+var clients = [];
+
 var wss = new WebSocketServer({server: server})
-console.log("websocket server created")
+console.log(`websocket server created at ${server.address()}, port: ${port}`)
 
 wss.on("connection", function(ws) {
   console.log("websocket connection open")
 
-  ws.on('message', function incoming(message) {
-    console.log('received: %s', message);
-    ws.send(message)
+  ws.on('message', function incoming(data) {
+    let json = JSON.parse(data)
+    if (type = json.type) {
+      switch(type) {
+        // Sent on user connecting
+        case "client connection": {
+          console.log("Client added");
+          clients.push(ws);
+          break;
+        }
+        // Sent on box coming online
+        case "box connection": {
+          console.log("Box added");
+          boxes.push(ws)
+          break;
+        }
+        // Pattern received from user
+        case "pattern": {
+          let box = json.box;
+          break;
+        }
+      }  
+    }
   });
 
-
   ws.on("close", function() {
+    // remove from lists
+    boxes = boxes.filter((box) => box !== ws)
+    clients = clients.filter((client) => client !== ws)
     console.log("websocket connection close")
+    console.log(boxes.length)
   })
 })
