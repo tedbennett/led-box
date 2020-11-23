@@ -17,8 +17,7 @@ var boxes = [];
 var clients = [];
 
 var wss = new WebSocketServer({server: server})
-console.log(`websocket server created at ${server.address()}, port: ${port}`)
-
+console.log(`websocket server created at ${server.address().address}, port: ${port}, hostname: ${require('os').hostname}`)
 wss.on("connection", function(ws) {
   console.log("websocket connection open")
 
