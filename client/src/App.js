@@ -18,12 +18,16 @@ class App extends Component {
   componentDidMount() {
     this.client.onopen = () => {
       console.log('WebSocket Client Connected');
+      const msg = {
+        type: "client connection",
+      };
+      this.client.send(JSON.stringify(msg))
     };
     this.client.onmessage = (message) => {
       const data = JSON.parse(message.data)
       console.log("message received: ", data)
       this.setState( () => ({value: this.state.value, messages: this.state.messages.concat(data.text)}));
-    };
+    }; 
   }
 
   handleChange = (event) => {
@@ -33,7 +37,7 @@ class App extends Component {
   handleSubmit = (event) => {
     event.preventDefault();
     const msg = {
-      type: "message",
+      type: "pattern",
       text: this.state.value,
     };
     this.client.send(JSON.stringify(msg));

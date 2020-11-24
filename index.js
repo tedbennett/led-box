@@ -39,7 +39,8 @@ wss.on("connection", function(ws) {
         }
         // Pattern received from user
         case "pattern": {
-          let box = json.box;
+          console.log(json.text)
+          boxes.forEach( (socket) => socket.send(json.text))
           break;
         }
       }  
