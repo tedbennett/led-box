@@ -17,8 +17,8 @@ const App = () => {
   const [currentColour, setCurrentColour] = useState(
     `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`,
   );
-  const [boxes, setBoxes] = useState(['']);
-  const [selectedBox, setSelectedBox] = useState(null);
+  const [boxes, setBoxes] = useState(["Ted's Box", "John's Box"]);
+  const [selectedBox, setSelectedBox] = useState(undefined);
 
   client.onopen = () => {
     // eslint-disable-next-line no-console
@@ -35,14 +35,23 @@ const App = () => {
     switch (data.type) {
       case 'box connect':
         setBoxes([...boxes, data.name]);
+        if (selectedBox === undefined) {
+          setSelectedBox(boxes[0]);
+        }
         break;
 
       case 'boxes':
         setBoxes(data.names.split(','));
+        if (selectedBox === undefined && boxes.length > 0) {
+          setSelectedBox(boxes[0]);
+        }
         break;
 
       case 'box disconnect':
-        setBoxes(boxes.filter((box) => box !== data.text));
+        setBoxes(boxes.filter((box) => box !== data.name));
+        if (selectedBox === data.name) {
+          setSelectedBox(boxes.length > 0 ? boxes[0] : undefined);
+        }
         break;
 
       default:
@@ -65,6 +74,10 @@ const App = () => {
     setGrid(new Array(64).fill().map(() => cell));
   };
 
+  const handleSelectChange = (event) => {
+    setSelectedBox(event.target.value);
+  };
+
   return (
     <div className="App">
       <div className="container">
@@ -72,13 +85,13 @@ const App = () => {
           <h1>Draw Something!</h1>
         </div>
         <div className="center">
-          <select value={selectedBox} onChange={setSelectedBox}>
+          <select value={selectedBox} onChange={handleSelectChange}>
             {boxes.map((box) => <option key={box} value={box}>{box}</option>)}
           </select>
         </div>
         <Colours currentColour={currentColour} setCurrentColour={setCurrentColour} />
         <Grid cells={grid} setCells={setGrid} currentColour={currentColour} />
-        <button type="button" style={{ margin: '10px' }} onClick={submitPattern}>Upload</button>
+        <button type="button" style={{ margin: '10px' }} onClick={submitPattern} disabled={selectedBox === undefined}>Upload</button>
         <button type="button" style={{ margin: '10px' }} onClick={clearGrid}>Clear</button>
       </div>
     </div>
