@@ -17,7 +17,7 @@ const App = () => {
   const [currentColour, setCurrentColour] = useState(
     `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`,
   );
-  const [boxes, setBoxes] = useState(["Ted's Box", "John's Box"]);
+  const [boxes, setBoxes] = useState([]);
   const [selectedBox, setSelectedBox] = useState(undefined);
 
   client.onopen = () => {
