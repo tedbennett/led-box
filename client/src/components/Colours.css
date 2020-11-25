@@ -1,0 +1,23 @@
+.flex {
+    display: inline-flex;
+    align-items: center;
+}
+
+.colour-tile {
+    height: 40px;
+    width: 40px;
+    border: 2px solid black;
+    margin: 10px;
+}
+
+.colour-tile:hover {
+    transform: scale(1.2);
+}
+
+input[type="color"] {
+    -webkit-appearance: none;
+    border: 2px solid black;
+    height: 45px;
+    width: 45px;
+    margin: 10px;
+}
