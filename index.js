@@ -15,8 +15,9 @@ console.log("http server listening on %d", port)
 var wss = new WebSocketServer({server: server})
 console.log(`websocket server created at ${server.address().address}, port: ${port}, hostname: ${require('os').hostname}`)
 
-// list of boxes and clients
+// list of boxes, pair of websocket and box name
 var boxes = [];
+// list of client websockets
 var clients = [];
 
 
@@ -48,7 +49,7 @@ wss.on("connection", function(ws) {
         */
         case "box connect": {
           console.log("Box added");
-          boxes.push({ws: ws, name: json.name})
+          boxes.push({socket: ws, name: json.name})
           clients.forEach((socket) => {
             const message = {
               type: 'box connect',
@@ -74,7 +75,7 @@ wss.on("connection", function(ws) {
             type: 'pattern',
             pattern: json.pattern
           }
-          box.send(message)
+          box.socket.send(message)
           break;
         }
       }  
@@ -85,8 +86,8 @@ wss.on("connection", function(ws) {
     // Cache length to quickly see if ws is box or client
     const numBoxes = boxes.length;
     // Get box as need its name, then remove from list
-    box = boxes.find((box) => box.ws === ws);
-    boxes = boxes.filter((box) => box.ws !== ws);
+    box = boxes.find((box) => box.socket === ws);
+    boxes = boxes.filter((box) => box.socket !== ws);
 
     if (boxes.length !== numBoxes) {
       clients.forEach((socket) => {
