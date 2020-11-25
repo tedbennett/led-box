@@ -12,35 +12,69 @@ server.listen(port)
 
 console.log("http server listening on %d", port)
 
-// list of box ids
+var wss = new WebSocketServer({server: server})
+console.log(`websocket server created at ${server.address().address}, port: ${port}, hostname: ${require('os').hostname}`)
+
+// list of boxes and clients
 var boxes = [];
 var clients = [];
 
-var wss = new WebSocketServer({server: server})
-console.log(`websocket server created at ${server.address().address}, port: ${port}, hostname: ${require('os').hostname}`)
+
 wss.on("connection", function(ws) {
   console.log("websocket connection open")
 
   ws.on('message', function incoming(data) {
     let json = JSON.parse(data)
+    
     if (type = json.type) {
       switch(type) {
         // Sent on user connecting
-        case "client connection": {
+        /* Message format:
+        {
+          type: 'client connect',
+        }
+        */
+        case "client connect": {
           console.log("Client added");
           clients.push(ws);
           break;
         }
-        // Sent on box coming online
-        case "box connection": {
+        // Box has come online, send to all clients
+        /* Message format:
+        {
+          type: 'box connect',
+          name: {Box name}
+        }
+        */
+        case "box connect": {
           console.log("Box added");
-          boxes.push(ws)
+          boxes.push({ws: ws, name: json.name})
+          clients.forEach((socket) => {
+            const message = {
+              type: 'box connect',
+              name: json.name
+            }
+            socket.send(JSON.stringify(message))
+    
+          })
           break;
         }
-        // Pattern received from user
+        // Pattern received from user, send to selected led box
+        /* Message format:
+        {
+          type: 'pattern',
+          pattern: {Array of 64 colour codes},
+          name: {Name of recipient box}
+        }
+        */
         case "pattern": {
-          console.log(json.text)
-          boxes.forEach( (socket) => socket.send(json.text))
+          console.log(json.pattern)
+          box = boxes.find((box) => box.name === json.name)
+          const message = {
+            type: 'pattern',
+            pattern: json.pattern
+          }
+          box.send(message)
           break;
         }
       }  
@@ -48,10 +82,23 @@ wss.on("connection", function(ws) {
   });
 
   ws.on("close", function() {
-    // remove from lists
-    boxes = boxes.filter((box) => box !== ws)
-    clients = clients.filter((client) => client !== ws)
-    console.log("websocket connection close")
-    console.log(boxes.length)
+    // Cache length to quickly see if ws is box or client
+    const numBoxes = boxes.length;
+    // Get box as need its name, then remove from list
+    box = boxes.find((box) => box.ws === ws);
+    boxes = boxes.filter((box) => box.ws !== ws);
+
+    if (boxes.length !== numBoxes) {
+      clients.forEach((socket) => {
+        const message = {
+          type: 'box disconnect',
+          name: box.name
+        }
+        socket.send(JSON.stringify(message))
+      })
+    } else {
+      clients = clients.filter((client) => client !== ws);
+    }
+    console.log(`websocket connection closed, now ${boxes.length} connections`);
   })
 })
