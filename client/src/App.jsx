@@ -34,7 +34,7 @@ const App = () => {
 
     switch (data.type) {
       case 'box connect':
-        setBoxes(boxes.push(data.name));
+        setBoxes([...boxes, data.name]);
         break;
 
       case 'boxes':
