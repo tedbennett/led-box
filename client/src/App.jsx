@@ -1,5 +1,5 @@
 /* eslint-disable import/named */
-import React, { useState } from 'react';
+import React from 'react';
 import Colours from './components/Colours';
 import Grid from './components/Grid';
 import './App.css';
@@ -9,93 +9,128 @@ const cell = {
   colour: '#000000',
 };
 
-const App = () => {
-  const host = window.location.origin.replace(/^http/, 'ws');
-  const client = new WebSocket(host);
+class App extends React.Component {
+  constructor() {
+    super();
+    const host = window.location.origin.replace(/^http/, 'ws');
+    this.client = new WebSocket(host);
 
-  const [grid, setGrid] = useState(new Array(64).fill().map(() => cell));
-  const [currentColour, setCurrentColour] = useState(
-    `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`,
-  );
-  const [boxes, setBoxes] = useState([]);
-  const [selectedBox, setSelectedBox] = useState(undefined);
-
-  client.onopen = () => {
-    // eslint-disable-next-line no-console
-    console.log('WebSocket Client Connected');
-    const msg = {
-      type: 'client connect',
+    this.state = {
+      grid: new Array(64).fill().map(() => cell),
+      colour: `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`,
+      boxes: [],
+      selectedBox: undefined,
     };
-    client.send(JSON.stringify(msg));
-  };
 
-  client.onmessage = (message) => {
-    const data = JSON.parse(message.data);
+    this.setSelectedBox = (event) => {
+      this.setState((prevState) => ({ ...prevState, selectedBox: event.target.value }));
+    };
 
-    switch (data.type) {
-      case 'box connect':
-        setBoxes([...boxes, data.name]);
-        if (selectedBox === undefined) {
-          setSelectedBox(boxes[0]);
-        }
-        break;
+    this.setCurrentColour = (colour) => {
+      this.setState((prevState) => ({ ...prevState, colour }));
+    };
 
-      case 'boxes':
-        setBoxes(data.names.split(','));
-        if (selectedBox === undefined && boxes.length > 0) {
-          setSelectedBox(boxes[0]);
-        }
-        break;
+    this.setGrid = (cells) => {
+      this.setState((prevState) => ({ ...prevState, grid: cells }));
+    };
 
-      case 'box disconnect':
-        setBoxes(boxes.filter((box) => box !== data.name));
-        if (selectedBox === data.name) {
-          setSelectedBox(boxes.length > 0 ? boxes[0] : undefined);
-        }
-        break;
+    this.clearGrid = () => {
+      this.setState((prevState) => ({ ...prevState, grid: new Array(64).fill().map(() => cell) }));
+    };
 
-      default:
-        break;
-    }
-  };
+    this.submitPattern = (event) => {
+      const { grid, selectedBox } = this.state;
+      event.preventDefault();
+      if (selectedBox !== null) {
+        const msg = {
+          type: 'pattern',
+          name: selectedBox,
+          pattern: grid.map((i) => i.colour).join(','),
+        };
+        this.client.send(JSON.stringify(msg));
+      }
+    };
+  }
 
-  const submitPattern = (event) => {
-    event.preventDefault();
-    if (selectedBox !== null) {
+  componentDidMount() {
+    this.client.onopen = () => {
+    // eslint-disable-next-line no-console
+      console.log('WebSocket Client Connected');
       const msg = {
-        type: 'pattern',
-        pattern: grid.map((i) => i.colour).join(','),
+        type: 'client connect',
       };
-      client.send(JSON.stringify(msg));
-    }
-  };
+      this.client.send(JSON.stringify(msg));
+    };
 
-  const clearGrid = () => {
-    setGrid(new Array(64).fill().map(() => cell));
-  };
+    this.client.onmessage = (message) => {
+      const { boxes, selectedBox } = this.state;
+      const data = JSON.parse(message.data);
 
-  const handleSelectChange = (event) => {
-    setSelectedBox(event.target.value);
-  };
+      switch (data.type) {
+        case 'box connect':
+          this.setState((prevState) => ({
+            ...prevState,
+            boxes: [...prevState.boxes, data.name],
+            selectedBox: prevState.selectedBox === undefined ? prevState.boxes[0] : undefined,
+          }));
+          break;
 
-  return (
-    <div className="App">
-      <div className="container">
-        <div className="center">
-          <h1>Draw Something!</h1>
+        case 'boxes':
+          this.setState((prevState) => ({
+            ...prevState,
+            boxes: data.names.split(','),
+            selectedBox: (selectedBox === undefined && boxes.length) > 0 ? boxes[0] : selectedBox,
+          }));
+          break;
+
+        case 'box disconnect':
+          this.setState((prevState) => ({
+            ...prevState,
+            boxes: boxes.filter((box) => box !== data.name),
+            selectedBox: (selectedBox === data.name && boxes.length) > 0 ? boxes[0] : undefined,
+          }));
+          break;
+
+        default:
+          break;
+      }
+    };
+  }
+
+  render() {
+    const {
+      grid, colour, boxes, selectedBox,
+    } = this.state;
+    return (
+      <div className="App">
+        <div className="container">
+          <div className="center">
+            <h1>Draw Something!</h1>
+          </div>
+          <div className="center">
+            <select value={selectedBox} onChange={this.setSelectedBox}>
+              {boxes.map((box) => <option key={box} value={box}>{box}</option>)}
+            </select>
+          </div>
+          <Colours currentColour={colour} setCurrentColour={this.setCurrentColour} />
+          <Grid
+            cells={grid}
+            setCells={this.setGrid}
+            currentColour={colour}
+          />
+          <button
+            type="button"
+            style={{ margin: '10px' }}
+            onClick={this.submitPattern}
+            disabled={selectedBox === undefined}
+          >
+            Upload
+          </button>
+          <button type="button" style={{ margin: '10px' }} onClick={this.clearGrid}>Clear</button>
         </div>
-        <div className="center">
-          <select value={selectedBox} onChange={handleSelectChange}>
-            {boxes.map((box) => <option key={box} value={box}>{box}</option>)}
-          </select>
-        </div>
-        <Colours currentColour={currentColour} setCurrentColour={setCurrentColour} />
-        <Grid cells={grid} setCells={setGrid} currentColour={currentColour} />
-        <button type="button" style={{ margin: '10px' }} onClick={submitPattern} disabled={selectedBox === undefined}>Upload</button>
-        <button type="button" style={{ margin: '10px' }} onClick={clearGrid}>Clear</button>
       </div>
-    </div>
-  );
-};
+    );
+  }
+}
 
 export default App;

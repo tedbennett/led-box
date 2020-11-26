@@ -86,7 +86,7 @@ wss.on("connection", function(ws) {
     // Cache length to quickly see if ws is box or client
     const numBoxes = boxes.length;
     // Get box as need its name, then remove from list
-    box = boxes.find((box) => box.socket === ws);
+    const box = boxes.find((box) => box.socket === ws);
     boxes = boxes.filter((box) => box.socket !== ws);
 
     if (boxes.length !== numBoxes) {
