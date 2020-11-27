@@ -68,6 +68,7 @@ class App extends React.Component {
 
       switch (data.type) {
         case 'box connect':
+          console.log(`Box connect: ${data.name}`);
           this.setState((prevState) => ({
             ...prevState,
             boxes: [...prevState.boxes, data.name],
@@ -76,6 +77,7 @@ class App extends React.Component {
           break;
 
         case 'boxes':
+          console.log(`Boxes: ${data.names}`);
           this.setState((prevState) => ({
             ...prevState,
             boxes: data.names.split(','),
@@ -84,6 +86,7 @@ class App extends React.Component {
           break;
 
         case 'box disconnect':
+          console.log(`Box disconnect: ${data.name}`);
           this.setState((prevState) => ({
             ...prevState,
             boxes: boxes.filter((box) => box !== data.name),

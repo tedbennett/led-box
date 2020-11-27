@@ -70,7 +70,7 @@ wss.on("connection", function(ws) {
         */
         case "pattern": {
           console.log(json.pattern)
-          box = boxes.find((box) => box.name === json.name)
+          const box = boxes.find((box) => box.name === json.name)
           const message = {
             type: 'pattern',
             pattern: json.pattern
