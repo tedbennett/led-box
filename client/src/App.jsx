@@ -12,11 +12,15 @@ const cell = {
 class App extends React.Component {
   constructor() {
     super();
-    const host = window.location.origin.replace(/^http/, 'ws');
+    let host = window.location.origin.replace(/^http/, 'ws');
+    if (process.env.NODE_ENV !== 'production') {
+      host = 'ws://localhost:5000';
+    }
     this.client = new WebSocket(host);
 
     this.state = {
       grid: new Array(64).fill().map(() => cell),
+      // Get a random colour
       colour: `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`,
       boxes: [],
       selectedBox: undefined,
@@ -41,11 +45,11 @@ class App extends React.Component {
     this.submitPattern = (event) => {
       const { grid, selectedBox } = this.state;
       event.preventDefault();
-      if (selectedBox !== null) {
+      if (selectedBox !== undefined) {
         const msg = {
           type: 'pattern',
           name: selectedBox,
-          pattern: grid.map((i) => i.colour).join(','),
+          pattern: grid.map((i) => i.colour),
         };
         this.client.send(JSON.stringify(msg));
       }
@@ -72,7 +76,7 @@ class App extends React.Component {
           this.setState((prevState) => ({
             ...prevState,
             boxes: [...prevState.boxes, data.name],
-            selectedBox: prevState.selectedBox === undefined ? prevState.boxes[0] : undefined,
+            selectedBox: prevState.selectedBox === undefined ? data.name : undefined,
           }));
           break;
 
@@ -90,7 +94,8 @@ class App extends React.Component {
           this.setState((prevState) => ({
             ...prevState,
             boxes: boxes.filter((box) => box !== data.name),
-            selectedBox: (selectedBox === data.name && boxes.length) > 0 ? boxes[0] : undefined,
+            selectedBox: (selectedBox === data.name && boxes.length === 1)
+              ? undefined : boxes.find((box) => box.name !== data.name),
           }));
           break;
 

@@ -13,7 +13,6 @@ server.listen(port)
 console.log("http server listening on %d", port)
 
 var wss = new WebSocketServer({server: server})
-console.log(`websocket server created at ${server.address().address}, port: ${port}, hostname: ${require('os').hostname}`)
 
 // list of boxes, pair of websocket and box name
 var boxes = [];
@@ -69,7 +68,7 @@ wss.on("connection", function(ws) {
         }
         */
         case "pattern": {
-          console.log(json.pattern)
+          console.log(`Pattern received: ${json.pattern}`)
           const box = boxes.find((box) => box.name === json.name)
           const message = {
             type: 'pattern',
@@ -86,18 +85,20 @@ wss.on("connection", function(ws) {
     // Cache length to quickly see if ws is box or client
     const numBoxes = boxes.length;
     // Get box as need its name, then remove from list
-    const box = boxes.find((box) => box.socket === ws);
+    const closedBox = boxes.find((box) => box.socket === ws);
     boxes = boxes.filter((box) => box.socket !== ws);
 
     if (boxes.length !== numBoxes) {
+      console.log(`Box ${closedBox.name} removed`)
       clients.forEach((socket) => {
         const message = {
           type: 'box disconnect',
-          name: box.name
+          name: closedBox.name
         }
         socket.send(JSON.stringify(message))
       })
     } else {
+      console.log(`Client removed`)
       clients = clients.filter((client) => client !== ws);
     }
     console.log(`websocket connection closed, now ${boxes.length} connections`);
