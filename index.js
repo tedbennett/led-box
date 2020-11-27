@@ -75,7 +75,7 @@ wss.on("connection", function(ws) {
             type: 'pattern',
             pattern: json.pattern
           }
-          box.socket.send(message)
+          box.socket.send(JSON.stringify(message));
           break;
         }
       }  
