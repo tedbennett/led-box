@@ -99,6 +99,9 @@ class App extends React.Component {
           }));
           break;
 
+        case 'keep alive':
+          break;
+
         default:
           break;
       }

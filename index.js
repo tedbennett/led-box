@@ -19,6 +19,15 @@ var boxes = [];
 // list of client websockets
 var clients = [];
 
+// keep alive connections
+let t = setInterval(() => {
+  const keepAlive = (socket) => {
+    socket.send(JSON.stringify( { type: "keep alive" } ))
+  }
+
+  boxes.forEach((box) => keepAlive(box.socket))
+  clients.forEach((client) => keepAlive(client))
+}, 45000)
 
 wss.on("connection", function(ws) {
   console.log("websocket connection open")
@@ -75,6 +84,18 @@ wss.on("connection", function(ws) {
             pattern: json.pattern
           }
           box.socket.send(JSON.stringify(message));
+          break;
+        }
+        // Pattern accepted by LED Box. Need to find a way to propagate this
+        // to the client.
+        /* Message format:
+        {
+          type: 'pattern accepted',
+          name: {Name of recipient box}
+        }
+        */
+        case "pattern accepted": {
+          console.log(`Pattern accepted by: ${json.name}`)
           break;
         }
       }  
