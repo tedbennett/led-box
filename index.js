@@ -46,6 +46,11 @@ wss.on("connection", function(ws) {
         case "client connect": {
           console.log("Client added");
           clients.push(ws);
+          const message = {
+            type: 'boxes',
+            names: boxes.map( (box) => box.name )
+          }
+          ws.send(JSON.stringify(message))
           break;
         }
         // Box has come online, send to all clients

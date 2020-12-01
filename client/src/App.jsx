@@ -84,8 +84,9 @@ class App extends React.Component {
           console.log(`Boxes: ${data.names}`);
           this.setState((prevState) => ({
             ...prevState,
-            boxes: data.names.split(','),
-            selectedBox: (selectedBox === undefined && boxes.length) > 0 ? boxes[0] : selectedBox,
+            boxes: data.names,
+            selectedBox: (selectedBox === undefined && data.names.length > 0)
+              ? data.names[0] : selectedBox,
           }));
           break;
 
